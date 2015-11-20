@@ -88,7 +88,7 @@ class MarketoClient:
         args = {
             'access_token' : self.token,
             'filterType' : str(filtr),
-            'filterValues' : (',').join(values)
+            'filterValues' : values
         }
         if len(fields) > 0:
             args['fields'] = ",".join(fields)
@@ -244,5 +244,5 @@ class MarketoClient:
         }
         data = HttpLib().post("https://" + self.host + "/rest/v1/leads.json" , args, data)
         if not data['success'] : raise MarketoException(data['errors'][0])
-        return data['result'][0]['status']
+        return data['result']
         
