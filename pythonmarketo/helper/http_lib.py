@@ -25,7 +25,7 @@ class HttpLib:
                 retries += 1
 
         
-    def post(self, endpoint, args, data):
+    def post(self, endpoint, args, data = None):
         retries = 0
         while True:
             if retries > self.max_retries:

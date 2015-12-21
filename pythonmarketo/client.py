@@ -33,7 +33,7 @@ class MarketoClient:
         '''
             max 10 rechecks
         '''
-        for i in range(0,10):
+        for i in range(0,14):
             try:
                 method_map={
                     'get_leads':self.get_leads,
@@ -47,6 +47,10 @@ class MarketoClient:
                     'get_email_content_by_id':self.get_email_content_by_id,
                     'get_email_template_content_by_id':self.get_email_template_content_by_id,
                     'get_email_templates':self.get_email_templates,
+                    'create_custom_activity':self.create_custom_activity,
+                    'get_lead_changes':self.get_lead_changes,
+                    'associate_lead':self.associate_lead,
+                    'remove_leads_by_listId':self.remove_leads_by_listId,
                 }
 
                 result = method_map[method](*args,**kargs) 
@@ -84,7 +88,8 @@ class MarketoClient:
     
     def get_leads(self, filtr, values = [], fields = []):
         self.authenticate()
-        values = values.split() if type(values) is str else values
+        values = values.split() if type(values) is str else ",".join(str(v) for v in values) 
+
         args = {
             'access_token' : self.token,
             'filterType' : str(filtr),
@@ -236,6 +241,16 @@ class MarketoClient:
             ]
         }
         return self.post(data)
+    
+    def create_custom_activity(self, body, attributes):
+        
+        data = {
+            'input' : [body['attributes'].append(attributes)
+             
+            ]
+        }
+        return self.post_custom(data)
+
            
     def post(self, data):
         self.authenticate()
@@ -245,4 +260,83 @@ class MarketoClient:
         data = HttpLib().post("https://" + self.host + "/rest/v1/leads.json" , args, data)
         if not data['success'] : raise MarketoException(data['errors'][0])
         return data['result']
+    
+    def post_custom(self, data):
+        self.authenticate()
+        args = {
+            'access_token' : self.token 
+        }
+        data = HttpLib().post("https://" + self.host + "/rest/v1/activities/external.json" , args, data)
+        if not data['success'] : raise MarketoException(data['errors'][0])
+        return data['result']
         
+    def remove_leads_by_listId(self, listId = None , batchSize = None, ids = []):
+        self.authenticate()
+        
+        ids = ids.split() if type(ids) is str else ",".join(str(v) for v in ids) 
+        
+        args = {
+            'access_token' : self.token,
+            'listId' : listId,
+            'id' : ids,
+            '_method': 'DELETE'
+        }
+        
+        if batchSize:
+            args['batchSize'] = batchSize   
+        result_list = []    
+        while True:
+            data = HttpLib().post("https://" + self.host + "/rest/v1/lists/" + str(listId)+ "/leads.json", args)
+            if data is None: raise Exception("Empty Response")
+            self.last_request_id = data['requestId']
+            if not data['success'] : raise MarketoException(data['errors'][0]) 
+            result_list.extend(data['result'])
+            if len(data['result']) == 0 or 'nextPageToken' not in data:
+                break
+            args['nextPageToken'] = data['nextPageToken']         
+        return result_list
+    
+    def get_lead_changes(self,  sinceDatetime, fields = None, batchSize = None, listId = None):
+            activity_result_list = []
+            nextPageToken = self.get_paging_token(sinceDatetime = sinceDatetime)
+            moreResult = True
+            while moreResult:
+                result = self.get_lead_changes_page( nextPageToken, fields, batchSize, listId)
+                if result is None:
+                    break
+                moreResult = result['moreResult']
+                nextPageToken = result['nextPageToken']
+                if 'result' in result:
+                    activity_result_list.extend(result['result'])
+            
+            return activity_result_list
+        
+    def get_lead_changes_page(self, nextPageToken, fields= None, batchSize = None, listId = None):
+        self.authenticate()
+        fields = fields.split() if type(fields) is str else fields
+        args = {
+            'access_token' : self.token,
+            'fields' : ",".join(fields),
+            'nextPageToken' : nextPageToken
+        }
+        if listId:
+            args['listId'] = listId
+        if batchSize:
+            args['batchSize'] = batchSize
+        data = HttpLib().get("https://" + self.host + "/rest/v1/activities/leadchanges.json", args)
+        if data is None: raise Exception("Empty Response")
+        if not data['success'] : raise MarketoException(data['errors'][0])
+        return data
+    
+    def associate_lead(self, lead_id ,cookie):
+        self.authenticate()
+        args = {
+            'access_token' : self.token,
+            'cookie':cookie
+        }
+        data = HttpLib().post("https://" + self.host + "/rest/v1/leads/"+ str(lead_id) + "/associate.json" , args)
+        if not data['success'] : raise MarketoException(data['errors'][0])
+        return data['result']
+        
+        
+     
