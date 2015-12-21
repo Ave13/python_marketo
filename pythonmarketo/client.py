@@ -244,10 +244,15 @@ class MarketoClient:
     
     def create_custom_activity(self, body, attributes):
         
+        attributes_list = []
+        for k,v in attributes.items():
+            dict = {'name':k,'value':v}
+            attributes_list.append(dict)
+        
+        body['attributes'] = attributes_list
+        
         data = {
-            'input' : [body['attributes'].append(attributes)
-             
-            ]
+            'input' :[body]
         }
         return self.post_custom(data)
 
