@@ -88,7 +88,7 @@ class MarketoClient:
     
     def get_leads(self, filtr, values = [], fields = []):
         self.authenticate()
-        values = values.split() if type(values) is str else ",".join(str(v) for v in values) 
+        #values = values.split() if type(values) is str else ",".join(str(v) for v in values) 
 
         args = {
             'access_token' : self.token,
@@ -341,7 +341,7 @@ class MarketoClient:
         }
         data = HttpLib().post("https://" + self.host + "/rest/v1/leads/"+ str(lead_id) + "/associate.json" , args)
         if not data['success'] : raise MarketoException(data['errors'][0])
-        return data['result']
+        return data
         
         
      
