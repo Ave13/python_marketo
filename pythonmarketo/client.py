@@ -86,9 +86,9 @@ class MarketoClient:
         self.scope = data['scope']
 
     
-    def get_leads(self, filtr, values = [], fields = []):
+    def get_leads(self, filtr, values = None, fields = []):
         self.authenticate()
-        #values = values.split() if type(values) is str else ",".join(str(v) for v in values) 
+        values = values if type(values) is str else ",".join(str(v) for v in values) 
 
         args = {
             'access_token' : self.token,
