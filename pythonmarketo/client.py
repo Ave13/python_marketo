@@ -33,7 +33,7 @@ class MarketoClient:
         '''
             max 10 rechecks
         '''
-        for i in range(0,14):
+        for i in range(0,15):
             try:
                 method_map={
                     'get_leads':self.get_leads,
@@ -51,6 +51,8 @@ class MarketoClient:
                     'get_lead_changes':self.get_lead_changes,
                     'associate_lead':self.associate_lead,
                     'remove_leads_by_listId':self.remove_leads_by_listId,
+                    'create_or_update_lead':self.create_or_update_lead
+                    
                 }
 
                 result = method_map[method](*args,**kargs) 
@@ -235,6 +237,17 @@ class MarketoClient:
         new_lead = dict(list({lookupField : lookupValue}.items()) + list(values.items()))
         data = {
             'action' : 'createOnly',
+            'lookupField' : lookupField,
+            'input' : [
+             new_lead
+            ]
+        }
+        return self.post(data)
+    
+    def create_or_update_lead(self, lookupField, lookupValue, values):
+        new_lead = dict(list({lookupField : lookupValue}.items()) + list(values.items()))
+        data = {
+            'action' : 'createOrUpdate',
             'lookupField' : lookupField,
             'input' : [
              new_lead
