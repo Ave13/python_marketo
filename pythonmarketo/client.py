@@ -244,14 +244,12 @@ class MarketoClient:
         }
         return self.post(data)
     
-    def create_or_update_lead(self, lookupField, lookupValue, values):
-        new_lead = dict(list({lookupField : lookupValue}.items()) + list(values.items()))
+    def create_or_update_lead(self, lookupField,  values):
+        #new_lead = dict(list({lookupField : 'Email'}.items()) + list(values.items()))
         data = {
             'action' : 'createOrUpdate',
             'lookupField' : lookupField,
-            'input' : [
-             new_lead
-            ]
+            'input' : values
         }
         return self.post(data)
     
