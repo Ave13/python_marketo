@@ -51,7 +51,8 @@ class MarketoClient:
                     'get_lead_changes':self.get_lead_changes,
                     'associate_lead':self.associate_lead,
                     'remove_leads_by_listId':self.remove_leads_by_listId,
-                    'create_or_update_lead':self.create_or_update_lead
+                    'create_or_update_lead':self.create_or_update_lead,
+                    'request_campaign':self.request_campaign
                     
                 }
 
@@ -259,7 +260,7 @@ class MarketoClient:
         for k,v in attributes.items():
             dict = {'name':k,'value':v}
             attributes_list.append(dict)
-        
+        #test
         body['attributes'] = attributes_list
         
         data = {
@@ -353,6 +354,33 @@ class MarketoClient:
         data = HttpLib().post("https://" + self.host + "/rest/v1/leads/"+ str(lead_id) + "/associate.json" , args)
         if not data['success'] : raise MarketoException(data['errors'][0])
         return data
+    
+    def request_campaign(self, id, leads, tokens=None):
+        self.authenticate()
+        if id is None: raise ValueError("Invalid argument: required argument id is none.")
+        if leads is None: raise ValueError("Invalid argument: required argument leads is none.")
+        leads_list = [{'id':items} for items in leads]
+        if tokens is not None:
+            token_list = [{'name':'{{' + k + '}}', 'value':v} for k, v in tokens.items()]
+            data={
+              'input': {"leads":
+                        leads_list,
+                        "tokens":
+                        token_list
+                       }
+                 }
+        else:
+            data={
+              'input': {"leads":
+                        leads_list
+                       }
+                 }
+        args = {
+            'access_token' : self.token
+        }
+        result = HttpLib().post("https://" + self.host + "/rest/v1/campaigns/" + str(id)+ "/trigger.json", args, data)
+        if not result['success'] : raise MarketoException(result['errors'][0])
+        return result['success']
         
         
      
