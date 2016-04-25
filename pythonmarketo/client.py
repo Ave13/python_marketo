@@ -53,7 +53,6 @@ class MarketoClient:
                     'remove_leads_by_listId':self.remove_leads_by_listId,
                     'create_or_update_lead':self.create_or_update_lead,
                     'request_campaign':self.request_campaign
-                    
                 }
 
                 result = method_map[method](*args,**kargs) 
@@ -180,9 +179,11 @@ class MarketoClient:
         return data['result']
 
         
-    def get_lead_activity_page(self, activityTypeIds, nextPageToken, batchSize = None, listId = None):
+    def get_lead_activity_page(self, activityTypeIds, nextPageToken, batchSize = None, listId = None,  leadIds = None):
         self.authenticate()
         activityTypeIds = activityTypeIds.split() if type(activityTypeIds) is str else activityTypeIds
+        leadIds = leadIds.split() if type(leadIds) is str else leadIds
+        
         args = {
             'access_token' : self.token,
             'activityTypeIds' : ",".join(activityTypeIds),
@@ -190,19 +191,24 @@ class MarketoClient:
         }
         if listId:
             args['listId'] = listId
+            
+        if leadIds:
+            args['leadIds'] = leadIds
+        
         if batchSize:
             args['batchSize'] = batchSize
+            
         data = HttpLib().get("https://" + self.host + "/rest/v1/activities.json", args)
         if data is None: raise Exception("Empty Response")
         if not data['success'] : raise MarketoException(data['errors'][0])
         return data
 
-    def get_lead_activity(self, activityTypeIds, sinceDatetime, batchSize = None, listId = None):
+    def get_lead_activity(self, activityTypeIds, sinceDatetime, batchSize = None, listId = None, leadIds = None):
         activity_result_list = []
         nextPageToken = self.get_paging_token(sinceDatetime = sinceDatetime)
         moreResult = True
         while moreResult:
-            result = self.get_lead_activity_page(activityTypeIds, nextPageToken, batchSize, listId)
+            result = self.get_lead_activity_page(activityTypeIds, nextPageToken, batchSize, listId, leadIds)
             if result is None:
                 break
             moreResult = result['moreResult']
